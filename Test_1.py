@@ -17,7 +17,7 @@ x = tf.Variable(x_train)
 y_ = tf.Variable(tf.cast(sparse_target(y_train), tf.float64))
 
 # Define NN and weight
-w1 = tf.Variable(tf.random_normal([13, 20], stddev=1, seed=1, dtype=tf.float64))
+w1 = tf.Variable(tf.random_normal([13, 200], stddev=1, seed=1, dtype=tf.float64))
 w2 = tf.Variable(tf.random_normal([20, 4], stddev=1, seed=1, dtype=tf.float64))
 w3 = tf.Variable(tf.random_normal([4, 2], stddev=1, seed=1, dtype=tf.float64))
 
