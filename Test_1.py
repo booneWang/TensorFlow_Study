@@ -27,6 +27,55 @@ y_ = tf.Variable(tf.cast(sparse_target(y_train), tf.float64))
 xx = tf.Variable(x_test)
 yy_ = tf.Variable(tf.cast(sparse_target(y_test), tf.float64))
 
+
+# input - x tensor, train input
+# output - y tensor, test output - for get output dimension purpose only
+# weight - array, layers and elements of each layer
+def weight_structure(input_tensor, output, weight):
+    # initialize weight_list
+    input_dim_num = tf.shape(input_tensor)[1]
+    output_dim_num = tf.shape(output)[1]
+
+    layer_num = len(weight)
+    weight_list = []
+    start, end = 0, 0
+
+    for j in range(0, layer_num):
+        # first layer
+        if j == 0:
+            start = input_dim_num
+            end = weight[0]
+
+        # last layer
+        elif j == layer_num - 1:
+            end = output_dim_num
+        else:
+            start = end
+            end = weight[j]
+
+        w = tf.Variable(tf.random_normal([start, end], stddev=1, dtype=tf.float64))
+        weight_list.append(w)
+
+    return weight_list
+
+
+def nn_structure(input_tensor, weight_list):
+    # create NN
+    layer_list = []
+    for j in range(0, len(weight_list)):
+        if j == 0:
+            layer = tf.nn.relu(tf.matmul(input_tensor, weight_list[j]))
+            layer_list.append(layer)
+        else:
+            layer = tf.nn.relu(tf.matmul(layer_list[j - 1], weight_list[j]))
+            layer_list.append(layer)
+
+    # return the last layer, this is the true output
+    return layer_list[-1]
+
+
+weight_list = weight_structure(x, y_, [50, 50])
+
 # Define Weight
 w1 = tf.Variable(tf.random_normal([13, 50], stddev=1, dtype=tf.float64))
 w2 = tf.Variable(tf.random_normal([50, 50], stddev=1, dtype=tf.float64))
