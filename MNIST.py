@@ -4,14 +4,14 @@ from Titanic import *
 import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
 
-x_train, x_test, y_train, y_test = get_titanic()
+mnist = input_data.read_data_sets("MNIST", one_hot=True)
 
 # instant
 DTYPE = tf.float64
-STEPS = 10000
-INPUT_NODE_NUM = 13
-OUTPUT_NODE_NUM = 2
-LAYERS = [50, 50, 50]
+STEPS = 100
+INPUT_NODE_NUM = 784
+OUTPUT_NODE_NUM = 10
+LAYERS = [500]
 
 
 # make the Target sparse, like [0,1,0] to [[0,1],[1,0],[0,1]
@@ -73,12 +73,12 @@ def nn_structure(input_tensor, weight_list, biases):
 
 
 # Define train Data
-x = tf.Variable(x_train, trainable=False)
-y_ = tf.Variable(tf.cast(sparse_target(y_train), DTYPE), trainable=False)
+x = tf.Variable(mnist.train.images, trainable=False, dtype=DTYPE)
+y_ = tf.Variable(mnist.train.labels, trainable=False)
 
 # Define Test Data
-xx = tf.Variable(x_test, trainable=False)
-yy_ = tf.Variable(tf.cast(sparse_target(y_test), DTYPE), trainable=False)
+xx = tf.Variable(mnist.validation.images, trainable=False, dtype=DTYPE)
+yy_ = tf.Variable(mnist.validation.labels, trainable=False)
 
 weight_list, biases = weight_structure(INPUT_NODE_NUM, OUTPUT_NODE_NUM, LAYERS)
 y = nn_structure(x, weight_list, biases)
@@ -118,5 +118,5 @@ with tf.Session() as sess:
             print("Round:{}, Accuracy:{}".format(i, sess.run(accuracy)))
 
     print("Round:{}, Accuracy:{}".format("final", sess.run(accuracy)))
-    print(sess.run(tf.argmax(yy, 1)))
-    print(sess.run(tf.argmax(yy_, 1)))
+    # print(sess.run(tf.argmax(yy, 1)))
+    # print(sess.run(tf.argmax(yy_, 1)))
