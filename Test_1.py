@@ -5,39 +5,26 @@ import matplotlib.pyplot as plt
 
 x_train, x_test, y_train, y_test = get_titanic()
 
+# instant
+DTYPE = tf.float64
+STEPS = 10000
 
+
+# make the Target sparse, like [0,1,0] to [[0,1],[1,0],[0,1]
 def sparse_target(input_data):
     temp = [[0, 1] if i == 1 else [1, 0] for i in input_data]
     temp = pd.DataFrame(temp, columns=['a', 'b'])
     return temp
 
 
-def inference(x, w_1, w_2, w_3, w_4):
-    middle1 = tf.nn.relu(tf.matmul(x, w_1))
-    middle2 = tf.nn.relu(tf.matmul(middle1, w_2))
-    middle3 = tf.nn.relu(tf.matmul(middle2, w_3))
-    return tf.nn.relu(tf.matmul(middle3, w_4))
-
-
-# Define train Data
-x = tf.Variable(x_train)
-y_ = tf.Variable(tf.cast(sparse_target(y_train), tf.float64))
-
-# Define Test Data
-xx = tf.Variable(x_test)
-yy_ = tf.Variable(tf.cast(sparse_target(y_test), tf.float64))
-
-
-# input - x tensor, train input
-# output - y tensor, test output - for get output dimension purpose only
+# Create the weight for NN
+# input_dim_num - dimension # of x tensor (the train input)
+# output_dim_num - dimension # of y tensor (the test output)
 # weight - array, layers and elements of each layer
-def weight_structure(input_tensor, output, weight):
-    # initialize weight_list
-    input_dim_num = tf.shape(input_tensor)[1]
-    output_dim_num = tf.shape(output)[1]
-
+def weight_structure(input_dim_num, output_dim_num, weight):
     layer_num = len(weight)
     weight_list = []
+    biases = []
     start, end = 0, 0
 
     for j in range(0, layer_num):
@@ -48,58 +35,73 @@ def weight_structure(input_tensor, output, weight):
 
         # last layer
         elif j == layer_num - 1:
+            start = end
             end = output_dim_num
+
+        # middle layer
         else:
             start = end
             end = weight[j]
 
-        w = tf.Variable(tf.random_normal([start, end], stddev=1, dtype=tf.float64))
+        w = tf.Variable(tf.random_normal([start, end], stddev=1, dtype=DTYPE))
+        b = tf.Variable(tf.constant(0.1, shape=[end], dtype=DTYPE))
+
         weight_list.append(w)
+        biases.append(b)
+    return weight_list, biases
 
-    return weight_list
 
-
-def nn_structure(input_tensor, weight_list):
-    # create NN
+# Create the Neural Network
+def nn_structure(input_tensor, weight_list, biases):
     layer_list = []
     for j in range(0, len(weight_list)):
+        # when it's the first layer, then start from input tensor
         if j == 0:
-            layer = tf.nn.relu(tf.matmul(input_tensor, weight_list[j]))
-            layer_list.append(layer)
+            layer = tf.nn.relu(tf.matmul(input_tensor, weight_list[j]) + biases[j])
+        # for other layer, start with previous layer's output
         else:
-            layer = tf.nn.relu(tf.matmul(layer_list[j - 1], weight_list[j]))
-            layer_list.append(layer)
+            layer = tf.nn.relu(tf.matmul(layer_list[j - 1], weight_list[j]) + biases[j])
 
-    # return the last layer, this is the true output
+        layer_list.append(layer)
+
+    # return the last layer which is the output
     return layer_list[-1]
 
 
-weight_list = weight_structure(x, y_, [50, 50])
+# Define train Data
+x = tf.Variable(x_train)
+y_ = tf.Variable(tf.cast(sparse_target(y_train), DTYPE))
 
-# Define Weight
-w1 = tf.Variable(tf.random_normal([13, 50], stddev=1, dtype=tf.float64))
-w2 = tf.Variable(tf.random_normal([50, 50], stddev=1, dtype=tf.float64))
-w3 = tf.Variable(tf.random_normal([50, 50], stddev=1, dtype=tf.float64))
-w4 = tf.Variable(tf.random_normal([50, 2], stddev=1, dtype=tf.float64))
+# Define Test Data
+xx = tf.Variable(x_test)
+yy_ = tf.Variable(tf.cast(sparse_target(y_test), DTYPE))
 
-# Define Output
-y = inference(x, w1, w2, w3, w4)
-yy = inference(xx, w1, w2, w3, w4)
+weight_list, biases = weight_structure(13, 2, [50, 50, 50])
+y = nn_structure(x, weight_list, biases)
+yy = nn_structure(xx, weight_list, biases)
 
 # Define Loss
 loss = tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y)
-train_step = tf.train.AdamOptimizer(0.001).minimize(loss)
+
+#
+Init_learning_rate = 0.8
+global_step = tf.Variable(0.0, trainable=False, dtype=DTYPE)
+decay_rate = 0.999
+decay_steps = 0.0001
+learn_rate = tf.train.exponential_decay(Init_learning_rate, global_step, decay_rate, decay_steps, staircase=True)
+
+train_step = tf.train.GradientDescentOptimizer(learn_rate).minimize(loss, global_step=global_step)
+# train_step = tf.train.AdamOptimizer(0.001).minimize(loss)
 
 # test accuracy
 compare = tf.equal(tf.argmax(yy, 1), tf.argmax(yy_, 1))
-accuracy = tf.round(tf.reduce_mean(tf.cast(compare, tf.float64)) * 10000) / 10000
+accuracy = tf.round(tf.reduce_mean(tf.cast(compare, DTYPE)) * 10000) / 10000
 
 with tf.Session() as sess:
     # initialization all variable
     init = tf.global_variables_initializer()
     sess.run(init)
 
-    STEPS = 5000
     PRINT_STEPS = round(STEPS / 5, 0)
 
     print("Round:{}, Accuracy:{}".format(0, sess.run(accuracy)))
@@ -112,5 +114,5 @@ with tf.Session() as sess:
             print("Round:{}, Accuracy:{}".format(i, sess.run(accuracy)))
 
     print("Round:{}, Accuracy:{}".format("final", sess.run(accuracy)))
-    # print(sess.run(tf.argmax(yy, 1)))
-    # print(sess.run(tf.argmax(yy_, 1)))
+    print(sess.run(tf.argmax(yy, 1)))
+    print(sess.run(tf.argmax(yy_, 1)))
