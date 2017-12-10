@@ -8,10 +8,13 @@ mnist = input_data.read_data_sets("MNIST", one_hot=True)
 
 # instant
 DTYPE = tf.float64
+#
 STEPS = 100
+PRINT_STEPS = round(STEPS / 5, 0)
+
 INPUT_NODE_NUM = 784
 OUTPUT_NODE_NUM = 10
-LAYERS = [500]
+LAYERS = [100, 100]
 
 
 # make the Target sparse, like [0,1,0] to [[0,1],[1,0],[0,1]
@@ -105,8 +108,6 @@ with tf.Session() as sess:
     # initialization all variable
     init = tf.global_variables_initializer()
     sess.run(init)
-
-    PRINT_STEPS = round(STEPS / 5, 0)
 
     print("Round:{}, Accuracy:{}".format(0, sess.run(accuracy)))
 
