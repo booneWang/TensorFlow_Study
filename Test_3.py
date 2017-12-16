@@ -1,6 +1,6 @@
 import tensorflow as tf
+from Titanic import *
 import pandas as pd
-from tensorflow.examples.tutorials.mnist import input_data
 
 
 def sparse_target(input_data):
@@ -9,26 +9,28 @@ def sparse_target(input_data):
     return temp
 
 
-mnist = input_data.read_data_sets("MNIST", one_hot=True)
-
 DTYPE = tf.float64
 BATCH_SIZE = 100
-TRAINING_ROUNDS = 10000
+TRAINING_ROUNDS = 5000
 PRINT_STEPS = round(TRAINING_ROUNDS / 5, 0)
 
-# Initialization Variable
-weight1 = tf.Variable(tf.random_normal([784, 500], stddev=1, dtype=DTYPE))
-weight2 = tf.Variable(tf.random_normal([500, 10], stddev=1, dtype=DTYPE))
-biases1 = tf.Variable(tf.constant(1.0, shape=[500], dtype=DTYPE))
-biases2 = tf.Variable(tf.constant(1.0, shape=[10], dtype=DTYPE))
+x_train, x_test, y_train, y_test = get_titanic()
+y_train = sparse_target(y_train)
+y_test = sparse_target(y_test)
 
-x = tf.placeholder(DTYPE, shape=[None, 784], name="train_input")
-y_ = tf.placeholder(DTYPE, shape=[None, 10], name="target_output")
+# Initialization Variable
+weight1 = tf.Variable(tf.random_normal([13, 20], stddev=1, dtype=DTYPE))
+weight2 = tf.Variable(tf.random_normal([20, 2], stddev=1, dtype=DTYPE))
+biases1 = tf.Variable(tf.constant(1.0, shape=[20], dtype=DTYPE))
+biases2 = tf.Variable(tf.constant(1.0, shape=[2], dtype=DTYPE))
+
+x = tf.placeholder(DTYPE, shape=[None, 13], name="train_input")
+y_ = tf.placeholder(DTYPE, shape=[None, 2], name="target_output")
 layer1 = tf.nn.relu(tf.matmul(x, weight1) + biases1)
 y = tf.nn.relu(tf.matmul(layer1, weight2) + biases2)
 
-xTest = tf.placeholder(DTYPE, shape=[None, 784], name="train_input")
-yTest_ = tf.placeholder(DTYPE, shape=[None, 10], name="target_output")
+xTest = tf.placeholder(DTYPE, shape=[None, 13], name="train_input")
+yTest_ = tf.placeholder(DTYPE, shape=[None, 2], name="target_output")
 layer11 = tf.nn.relu(tf.matmul(xTest, weight1) + biases1)
 yTest = tf.nn.relu(tf.matmul(layer11, weight2) + biases2)
 
@@ -50,13 +52,13 @@ for j in range(0, 1):
     print("------{}-------".format(j))
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        test_feed = {xTest: mnist.test.images, yTest_: mnist.test.labels}
+        train_feed = {x: x_train, y_: y_train}
+        test_feed = {xTest: x_test, yTest_: y_test}
 
         print("Rounds:{}, Accuracy: {}".format(0, sess.run(accuracy, feed_dict=test_feed)))
 
         for i in range(1, TRAINING_ROUNDS):
-            xtrain, ytrain = mnist.validation.next_batch(BATCH_SIZE)
-            sess.run(train_step, feed_dict={x: xtrain, y_: ytrain})
+            sess.run(train_step, feed_dict=train_feed)
 
             if i % PRINT_STEPS == 0:
                 print("Rounds:{}, Accuracy: {}".format(i, sess.run(accuracy, feed_dict=test_feed)))
