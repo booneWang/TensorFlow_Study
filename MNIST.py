@@ -13,7 +13,7 @@ mnist = input_data.read_data_sets("MNIST", one_hot=True)
 
 DTYPE = tf.float64
 BATCH_SIZE = 100
-TRAINING_ROUNDS = 10000
+TRAINING_ROUNDS = 8000
 PRINT_STEPS = round(TRAINING_ROUNDS / 5, 0)
 
 # Initialization Variable

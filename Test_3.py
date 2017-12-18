@@ -42,13 +42,13 @@ loss = tf.reduce_mean(cross_entropy)
 global_step = tf.Variable(0.0, trainable=False, dtype=DTYPE)
 learn_rate = tf.train.exponential_decay(0.8, global_step, 100, 0.9, staircase=True)
 train_step = tf.train.GradientDescentOptimizer(learn_rate).minimize(loss, global_step=global_step)
-# train_step = tf.train.AdamOptimizer(0.001).minimize(loss)
+# train_step = tf.train.AdamOptimizer(0.01).minimize(loss)
 
 # Accuracy Function
 prediction = tf.equal(tf.argmax(yTest_, 1), tf.argmax(yTest, 1))
 accuracy = tf.reduce_mean(tf.cast(prediction, DTYPE))
 
-for j in range(0, 1):
+for j in range(0, 10):
     print("------{}-------".format(j))
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
