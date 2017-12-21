@@ -1,7 +1,8 @@
-import tensorflow as tf
-import pandas as pd
-from tensorflow.examples.tutorials.mnist import input_data
 import os
+
+import pandas as pd
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -15,9 +16,9 @@ def sparse_target(input_data):
 mnist = input_data.read_data_sets("MNIST", one_hot=True)
 
 DTYPE = tf.float64
-BATCH_SIZE = 100
-TRAINING_ROUNDS = 1000
-PRINT_STEPS = round(TRAINING_ROUNDS / 10, 0)
+BATCH_SIZE = 500
+TRAINING_ROUNDS = 5000
+PRINT_STEPS = round(TRAINING_ROUNDS / 5, 0)
 
 # Initialization Variable
 weight1 = tf.Variable(tf.random_normal([784, 500], stddev=1, dtype=DTYPE))
