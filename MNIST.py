@@ -1,4 +1,5 @@
 import os
+import time
 
 import pandas as pd
 import tensorflow as tf
@@ -17,7 +18,7 @@ mnist = input_data.read_data_sets("MNIST", one_hot=True)
 
 DTYPE = tf.float64
 BATCH_SIZE = 500
-TRAINING_ROUNDS = 5000
+TRAINING_ROUNDS = 1000
 PRINT_STEPS = round(TRAINING_ROUNDS / 5, 0)
 
 # Initialization Variable
@@ -51,20 +52,26 @@ prediction = tf.equal(tf.argmax(yTest_, 1), tf.argmax(yTest, 1))
 accuracy = tf.reduce_mean(tf.cast(prediction, DTYPE))
 
 for j in range(0, 1):
+    # record starting time
+    time_start = time.time()
+
     print("------{}-------".format(j))
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         test_feed = {xTest: mnist.test.images, yTest_: mnist.test.labels}
 
-        print("Rounds:{}, Accuracy: {}".format(0, sess.run(accuracy, feed_dict=test_feed)))
+        print("time:{}, Rounds:{}, Accuracy: {}".format(round(time.time() - time_start, 0), 0,
+                                                        sess.run(accuracy, feed_dict=test_feed)))
 
         for i in range(1, TRAINING_ROUNDS):
             xtrain, ytrain = mnist.validation.next_batch(BATCH_SIZE)
             sess.run(train_step, feed_dict={x: xtrain, y_: ytrain})
 
             if i % PRINT_STEPS == 0:
-                print("Rounds:{}, Accuracy: {}".format(i, sess.run(accuracy, feed_dict=test_feed)))
+                print("time:{}, Rounds:{}, Accuracy: {}".format(round(time.time() - time_start, 0), i,
+                                                                sess.run(accuracy, feed_dict=test_feed)))
 
-        print("Rounds:{}, Accuracy: {}".format("Final", sess.run(accuracy, feed_dict=test_feed)))
+        print("time:{}, Rounds:{}, Accuracy: {}".format(round(time.time() - time_start, 0), "Final",
+                                                        sess.run(accuracy, feed_dict=test_feed)))
         print(sess.run(tf.argmax(yTest, 1), feed_dict=test_feed))
         print(sess.run(tf.argmax(yTest_, 1), feed_dict=test_feed))
