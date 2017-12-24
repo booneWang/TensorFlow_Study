@@ -17,9 +17,9 @@ def sparse_target(input_data):
 mnist = input_data.read_data_sets("MNIST", one_hot=True)
 
 DTYPE = tf.float64
-BATCH_SIZE = 500
-TRAINING_ROUNDS = 1000
-PRINT_STEPS = round(TRAINING_ROUNDS / 5, 0)
+BATCH_SIZE = 100
+TRAINING_ROUNDS = 30000
+PRINT_STEPS = round(TRAINING_ROUNDS / 30, 0)
 global_step = tf.Variable(0.0, trainable=False, dtype=DTYPE)
 
 # Initialization Variable
@@ -54,7 +54,7 @@ cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=
 loss = tf.reduce_mean(cross_entropy)
 
 # Training Function
-learn_rate = tf.train.exponential_decay(0.8, global_step, 100, 0.9, staircase=True)
+learn_rate = tf.train.exponential_decay(0.8, global_step, mnist.train.num_examples / BATCH_SIZE, 0.9, staircase=True)
 train_step = tf.train.GradientDescentOptimizer(learn_rate).minimize(loss, global_step=global_step)
 # train_step = tf.train.AdamOptimizer(0.001).minimize(loss)
 with tf.control_dependencies([train_step, vao]):
@@ -77,7 +77,7 @@ for j in range(0, 1):
                                                         sess.run(accuracy, feed_dict=test_feed)))
 
         for i in range(1, TRAINING_ROUNDS):
-            xtrain, ytrain = mnist.validation.next_batch(BATCH_SIZE)
+            xtrain, ytrain = mnist.train.next_batch(BATCH_SIZE)
             sess.run(train_op, feed_dict={x: xtrain, y_: ytrain})
 
             if i % PRINT_STEPS == 0:
